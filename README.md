@@ -33,8 +33,91 @@ Ex- docker run -it -p 2301:8080 --name jenpro jentest:v5
 
 Step - 2: Now, we move on to our Jenkins tasks.
 
-TASK 1 : Production In this task, the code will be auto downloaded from Github. For this, I have used trigger method.
+**TASK 1 : Production** 
+In this task, the code will be auto downloaded from Github. For this, I have used trigger method.
+
+![](/images/prod1.png)
+
+![](/images/prod2.png)
+
+The trigger would work and I have provided the link along with the authentication token to my local git. As soon as any code is pushed, Git hook would work & run this task automatically. In the execute shell section, The webpages are being downloaded to this folder inside the container.
+
+![](/images/prod3.png)
 
 
+**TASK 2 : Transfer**
+In this task, the web pages downloaded inside the container are being transferred to the base Redhat using scp. I have already authorized a ssh key from my container to Redhat.
+
+
+ ![](/images/transfer.png)
  
+ 
+ 
+ 
+**TASK 3 : Deployment**
+In this task, the file type is checked by checking the extension. Like if the pages are build in html, the extension of the file would be .html, then the code would detect and launch an httpd server to deploy the pages. If the pages are build in php, the extension of the file would be .php, then a php supporting container would be deployed. I have checked just 2 types - html & php but you can add more depending upon your requirements. The suitable pod will auto launch and the code will be auto deployed.
+
+For running the kubectl through your redhat, make sure that your minikube is running, all the necessary keys & certificates are transferred in Redhat & the config file is successfully built. A demo config file to setup kubectl is as follows :
+
+
+    apiVersion: v1
+    kind: Config
+
+    clusters:
+    - cluster:
+        server: https://192.168.99.101:8443
+        certificate-authority: /root/ca.crt
+      name: apun_ka_cluster
+
+    contexts:
+    - context:
+        cluster: apun_ka_cluster
+        user: sparsh
+
+    users:
+    - name: sparsh
+      user:
+        client-key: /root/client.key
+        client-certificate: /root/client.crt
+        
+After creating this file, save it in the .kube folder. Now, we can access the kubernetes via redhat.
+
+
+![](/images/deploy.png)
+
+
+**TASK 4 : Testing**
+In this task, the deployed code would be tested and if there is any error, an email will be automatically sent to the mentioned emails. For this, I have used the status method, i.e. , whenever we access any web page using curl and linux, the status is 200 if the page is working, otherwise not. So, I have segregated the status and used it in my concept. The exit 1 would deliberately fail the task.
+
+
+![](/images/test1.png)
+
+![](/images/test2.png)
+
+![](/images/test3.png)
+
+If your email isn't working, you need to go to Jenkins configuration and do the following setup. 
+
+![](/images/test4.png)
+
+If you are still facing any errors in email, go to your jenkins container & run ---
+
+![](/images/test5.png)
+
+In that file, in the _**JENKINS_JAVA_OPTIONS**_, make the following changes :
+
+![](/images/test6.png)
+
+After that, run sudo service jenkins restart cmd in your jenkins container.
+
+If you still face error in sending email, & the popup says authentication error, you need to go to your google account & disable the two step authentication & turn on the less secure app access option below it. After this, the email would be working absolutely fine.
+
+
+**Conclusion -** Since, we have launched the pods using Kubernetes Deployment, we need not worry about the monitoring. If the pods will crash, the replica set working behind the deployment will relaunch the pods.
+
+You can open the IP in your browser & see the website.
+
+That's all for now !!
+Any suggestions are highly appreciated.
+
 
